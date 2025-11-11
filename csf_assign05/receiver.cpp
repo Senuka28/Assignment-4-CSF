@@ -22,6 +22,15 @@ int main(int argc, char **argv) {
 
   // TODO: connect to server
 
+  try {
+    conn.connect(server_hostname, server_port);
+  } catch (const std::exception &exception1) {
+    std::cerr << "There is unfortunately an error when we try connecting to server which is " << e.what() << std::endl;
+    return 1;
+  }
+
+
+
   // TODO: send rlogin and join messages (expect a response from
   //       the server for each one)
 
