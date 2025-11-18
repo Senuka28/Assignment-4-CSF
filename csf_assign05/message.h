@@ -19,21 +19,31 @@ struct Message {
   Message(const std::string &tag, const std::string &data)
     : tag(tag), data(data) { }
 
+  // should convert Message into specific format
   std::string encode() const {
     std::ostringstream oss;
-    oss << tag << ":" << data << "\n";
-    return oss.str();
+    oss << tag << ":" << data << "\n"; // write tag:data into string builder oss made
+    return oss.str(); // return ts msg
   }
 
+  // should parse raw input line into Message obj to decode
   bool decode(const std::string &raw) {
+    // to find first : separator (found between tag:data)
     size_t sep = raw.find(':');
-    if (sep == std::string::npos)
+    if (sep == std::string::npos) { // not found so invalid :(
       return false;
+    }
+
+    // here split string into this tag:data format
     tag = raw.substr(0, sep);
     data = raw.substr(sep + 1);
-    while (!data.empty() && (data.back() == '\n' || data.back() == '\r'))
+
+    // to remove maybe possible newline or carriage retrun chars
+    while (!data.empty() && (data.back() == '\n' || data.back() == '\r')) {
       data.pop_back();
-    return true;
+    }
+
+    return true; // successful decoding
   }
 };
 

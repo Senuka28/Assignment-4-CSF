@@ -22,16 +22,19 @@ int main(int argc, char **argv) {
   username = argv[3];
 
   // TODO: connect to server
-Connection conn;
-  try {
+  Connection conn;
+ 
+  try { // try chat server connect
     conn.connect(server_hostname, server_port);
-  } catch (const std::exception &e) {
-    std::cerr << "Error connecting to server: " << e.what() << std::endl;
+  } catch (const std::exception &e) { // exception bc connection fails
+    std::cerr << "There is unfortunately an error when we try connecting to server which is " << e.what() << std::endl;
     return 1;
   }
 
   // TODO: send slogin message
-  Message msg(TAG_SLOGIN, username);
+  Message msg(TAG_SLOGIN, username); // supposed ot identify us as sender client to server
+
+  // send the slogin username and then wait for an ok or err
   if (!conn.send(msg) || !conn.receive(msg) || msg.tag == TAG_ERR) {
     std::cerr << msg.data << std::endl;
     return 1;
@@ -42,28 +45,36 @@ Connection conn;
   std::string line;
     while (std::getline(std::cin, line)) {
       line = trim(line);
-      if (line.empty()) continue;
+      if (line.empty()) { // ignore any empty lines
+        continue;
+      }
 
       Message out;
       if (line.rfind("/join ", 0) == 0) {
-        out = Message(TAG_JOIN, line.substr(6));
+        out = Message(TAG_JOIN, line.substr(6)); // to join new room, extract the room name
       } else if (line == "/leave") {
-        out = Message(TAG_LEAVE, "");
+        out = Message(TAG_LEAVE, ""); // to leave the current room you're in
       } else if (line == "/quit") {
-        out = Message(TAG_QUIT, "");
+        out = Message(TAG_QUIT, ""); // will quit the sesh and notify server
       } else if (line[0] == '/') {
-        std::cerr << "Unknown command\n";
+        std::cerr << "The command isn't known to us\n"; // happens when command not known
         continue;
-      } else {
-        out = Message(TAG_SENDALL, line);
+      } else { // normal chat msg
+        out = Message(TAG_SENDALL, line); // anything not starting w / is broadcast to room
       }
 
-      if (!conn.send(out)) break;
-      if (!conn.receive(msg)) break;
+      // these are for sending message and wait for response
+      // client to wait for ok or err before input accepting
+      if (!conn.send(out)) {
+        break;
+      }
+      if (!conn.receive(msg)) {
+        break;
+      }
 
-      if (msg.tag == TAG_ERR) {
+      if (msg.tag == TAG_ERR) { // given server rej request print an error
         std::cerr << msg.data << std::endl;
-      } else if (out.tag == TAG_QUIT) {
+      } else if (out.tag == TAG_QUIT) { // quit tag here for break
         break;
       }
     }
